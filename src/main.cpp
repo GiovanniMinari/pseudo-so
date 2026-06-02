@@ -11,6 +11,7 @@ int main(int argc, char* argv[]) {
     try {
         Dispatcher dispatcher;
         dispatcher.load(argv[1], argv[2], argv[3]);
+        dispatcher.run();
     } catch (const std::exception& error) {
         std::cerr << "Erro: " << error.what() << "\n";
         return 1;

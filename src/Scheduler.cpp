@@ -46,11 +46,18 @@ int Scheduler::getNextProcessPid() {
 }
 
 void Scheduler::requeueUserProcess(Process& process) {
+    if (process.getPriority() == 1) {
+        process.setPriority(2);
+    } else if (process.getPriority() == 2) {
+        process.setPriority(3);
+    }
+
     addProcess(process);
 }
 
 void Scheduler::applyAging(std::vector<Process>& processes) {
     (void) processes;
+    (void) agingLimit;
 }
 
 int Scheduler::getQuantum() const {

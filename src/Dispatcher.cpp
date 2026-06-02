@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <limits>
 #include <stdexcept>
 #include "InputParser.h"
 
@@ -21,9 +22,9 @@ void Dispatcher::load(
     processes = parser.readProcesses(processesFile);
     parser.readFileSystemInput(filesFile, fileSystemManager);
 
-    std::vector<std::vector<int>> references = parser.readPageReferences(stringsFile);
+    std::vector<std::vector<int> > references = parser.readPageReferences(stringsFile);
 
-    int amountToAttach = std::min(processes.size(), references.size());
+    int amountToAttach = static_cast<int>(std::min(processes.size(), references.size()));
     for (int i = 0; i < amountToAttach; i++) {
         processes[i].setPageReferences(references[i]);
     }
@@ -33,11 +34,143 @@ void Dispatcher::load(
             << "Aviso: quantidade de linhas em string.txt (" << references.size()
             << ") diferente da quantidade de processos (" << processes.size() << ").\n";
     }
+}
 
-    std::cout << "dispatcher => processos carregados\n";
-    for (std::size_t i = 0; i < processes.size(); i++) {
-        printDispatcherInfo(processes[i]);
+void Dispatcher::run() {
+    currentTime = 0;
+
+    while (!allProcessesFinished()) {
+        createArrivedProcesses();
+
+        if (!scheduler.hasReadyProcess()) {
+            int nextArrivalTime = std::numeric_limits<int>::max();
+
+            for (std::size_t i = 0; i < processes.size(); i++) {
+                if (processes[i].getState() == ProcessState::NEW
+                    && processes[i].getArrivalTime() < nextArrivalTime) {
+                    nextArrivalTime = processes[i].getArrivalTime();
+                }
+            }
+
+            if (nextArrivalTime == std::numeric_limits<int>::max()) {
+                break;
+            }
+
+            if (nextArrivalTime > currentTime) {
+                currentTime = nextArrivalTime;
+            } else {
+                currentTime++;
+            }
+
+            continue;
+        }
+
+        int pid = scheduler.getNextProcessPid();
+        if (pid < 0 || pid >= static_cast<int>(processes.size())) {
+            continue;
+        }
+
+        Process& process = processes[pid];
+        if (process.isFinished()) {
+            finishProcess(process);
+            continue;
+        }
+
+        if (process.isRealTime()) {
+            executeRealTimeProcess(process);
+        } else {
+            executeUserProcess(process);
+        }
     }
+
+    std::cout << "dispatcher => todos os processos terminaram.\n";
+}
+
+void Dispatcher::printFinalReport() const {
+    std::cout << "dispatcher => relatorio final sera implementado nas proximas fases.\n";
+}
+
+void Dispatcher::createArrivedProcesses() {
+    for (std::size_t i = 0; i < processes.size(); i++) {
+        Process& process = processes[i];
+
+        if (process.getState() == ProcessState::NEW
+            && process.getArrivalTime() <= currentTime) {
+            process.setState(ProcessState::READY);
+            scheduler.addProcess(process);
+        }
+    }
+}
+
+bool Dispatcher::allProcessesFinished() const {
+    for (std::size_t i = 0; i < processes.size(); i++) {
+        if (!processes[i].isFinished()) {
+            return false;
+        }
+    }
+    return true;
+}
+
+void Dispatcher::executeRealTimeProcess(Process& process) {
+    process.setState(ProcessState::RUNNING);
+
+    printDispatcherInfo(process);
+    std::cout << "process " << process.getPid() << " => \n";
+
+    if (process.getExecutedInstructions() == 0) {
+        std::cout << "P" << process.getPid() << " STARTED\n";
+    }
+
+    while (!process.isFinished()) {
+        process.executeOneInstruction();
+        currentTime++;
+
+        std::cout << "P" << process.getPid()
+                  << " instruction " << process.getExecutedInstructions()
+                  << "\n";
+    }
+
+    finishProcess(process);
+    std::cout << "P" << process.getPid() << " return SIGINT\n";
+}
+
+void Dispatcher::executeUserProcess(Process& process) {
+    process.setState(ProcessState::RUNNING);
+
+    printDispatcherInfo(process);
+    std::cout << "process " << process.getPid() << " => \n";
+
+    if (process.getExecutedInstructions() == 0) {
+        std::cout << "P" << process.getPid() << " STARTED\n";
+    }
+
+    int executedInThisQuantum = 0;
+    while (!process.isFinished()
+           && executedInThisQuantum < scheduler.getQuantum()) {
+        process.executeOneInstruction();
+        executedInThisQuantum++;
+        currentTime++;
+
+        std::cout << "P" << process.getPid()
+                  << " instruction " << process.getExecutedInstructions()
+                  << "\n";
+    }
+
+    if (process.isFinished()) {
+        finishProcess(process);
+        std::cout << "P" << process.getPid() << " return SIGINT\n";
+        return;
+    }
+
+    process.setState(ProcessState::READY);
+
+    // Processos que chegaram durante o quantum entram na fila antes do processo atual voltar.
+    createArrivedProcesses();
+    scheduler.requeueUserProcess(process);
+}
+
+void Dispatcher::finishProcess(Process& process) {
+    process.setState(ProcessState::FINISHED);
 }
 
 void Dispatcher::printDispatcherInfo(const Process& process) const {
@@ -53,38 +186,4 @@ void Dispatcher::printDispatcherInfo(const Process& process) const {
     std::cout << " scanners: " << resources.scanners << "\n";
     std::cout << " modems: " << resources.modems << "\n";
     std::cout << " drives: " << resources.sataDrives << "\n";
-    std::cout << " page references loaded: "
-              << (process.hasNextPageReference() ? "yes" : "no") << "\n";
-}
-
-void Dispatcher::run() {
-    std::cout << "dispatcher => fase 1: execucao ainda nao implementada.\n";
-}
-
-void Dispatcher::printFinalReport() const {
-    std::cout << "dispatcher => fase 1: relatorio final ainda nao implementado.\n";
-}
-
-void Dispatcher::createArrivedProcesses() {
-}
-
-bool Dispatcher::allProcessesFinished() const {
-    for (std::size_t i = 0; i < processes.size(); i++) {
-        if (!processes[i].isFinished()) {
-            return false;
-        }
-    }
-    return true;
-}
-
-void Dispatcher::executeRealTimeProcess(Process& process) {
-    (void) process;
-}
-
-void Dispatcher::executeUserProcess(Process& process) {
-    (void) process;
-}
-
-void Dispatcher::finishProcess(Process& process) {
-    process.setState(ProcessState::FINISHED);
 }
