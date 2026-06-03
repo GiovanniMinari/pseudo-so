@@ -53,6 +53,9 @@ void Dispatcher::run() {
             }
 
             if (nextArrivalTime == std::numeric_limits<int>::max()) {
+                std::cout
+                    << "dispatcher => nenhum processo pronto. "
+                    << "Se ainda houver processo bloqueado, ele esta aguardando recurso de E/S.\n";
                 break;
             }
 
@@ -94,10 +97,26 @@ void Dispatcher::createArrivedProcesses() {
     for (std::size_t i = 0; i < processes.size(); i++) {
         Process& process = processes[i];
 
-        if (process.getState() == ProcessState::NEW
-            && process.getArrivalTime() <= currentTime) {
+        bool canTryToEnterReadyQueue =
+            (process.getState() == ProcessState::NEW
+             || process.getState() == ProcessState::BLOCKED)
+            && process.getArrivalTime() <= currentTime;
+
+        if (!canTryToEnterReadyQueue) {
+            continue;
+        }
+
+        if (resourceManager.allocate(process)) {
             process.setState(ProcessState::READY);
             scheduler.addProcess(process);
+        } else {
+            if (process.getState() == ProcessState::NEW) {
+                std::cout
+                    << "dispatcher => P" << process.getPid()
+                    << " BLOCKED: aguardando recurso de E/S.\n";
+            }
+
+            process.setState(ProcessState::BLOCKED);
         }
     }
 }
@@ -170,6 +189,7 @@ void Dispatcher::executeUserProcess(Process& process) {
 }
 
 void Dispatcher::finishProcess(Process& process) {
+    resourceManager.release(process);
     process.setState(ProcessState::FINISHED);
 }
 

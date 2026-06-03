@@ -1,0 +1,131 @@
+dispatcher => 
+ PID: 0
+ arrival: 0
+ frames: 4
+ priority: 0
+ time: 3
+ printers: 0
+ scanners: 0
+ modems: 0
+ drives: 0
+process 0 => 
+P0 STARTED
+P0 instruction 1
+P0 instruction 2
+P0 instruction 3
+P0 return SIGINT
+dispatcher => 
+ PID: 1
+ arrival: 1
+ frames: 4
+ priority: 1
+ time: 4
+ printers: 0
+ scanners: 0
+ modems: 0
+ drives: 0
+process 1 => 
+P1 STARTED
+P1 instruction 1
+dispatcher => 
+ PID: 2
+ arrival: 1
+ frames: 3
+ priority: 1
+ time: 2
+ printers: 0
+ scanners: 0
+ modems: 0
+ drives: 0
+process 2 => 
+P2 STARTED
+P2 instruction 1
+dispatcher => 
+ PID: 3
+ arrival: 2
+ frames: 3
+ priority: 2
+ time: 3
+ printers: 0
+ scanners: 0
+ modems: 0
+ drives: 0
+process 3 => 
+P3 STARTED
+P3 instruction 1
+dispatcher => 
+ PID: 1
+ arrival: 1
+ frames: 4
+ priority: 2
+ time: 3
+ printers: 0
+ scanners: 0
+ modems: 0
+ drives: 0
+process 1 => 
+P1 instruction 2
+dispatcher => 
+ PID: 2
+ arrival: 1
+ frames: 3
+ priority: 2
+ time: 1
+ printers: 0
+ scanners: 0
+ modems: 0
+ drives: 0
+process 2 => 
+P2 instruction 2
+P2 return SIGINT
+dispatcher => 
+ PID: 3
+ arrival: 2
+ frames: 3
+ priority: 3
+ time: 2
+ printers: 0
+ scanners: 0
+ modems: 0
+ drives: 0
+process 3 => 
+P3 instruction 2
+dispatcher => 
+ PID: 1
+ arrival: 1
+ frames: 4
+ priority: 3
+ time: 2
+ printers: 0
+ scanners: 0
+ modems: 0
+ drives: 0
+process 1 => 
+P1 instruction 3
+dispatcher => 
+ PID: 3
+ arrival: 2
+ frames: 3
+ priority: 3
+ time: 1
+ printers: 0
+ scanners: 0
+ modems: 0
+ drives: 0
+process 3 => 
+P3 instruction 3
+P3 return SIGINT
+dispatcher => 
+ PID: 1
+ arrival: 1
+ frames: 4
+ priority: 3
+ time: 1
+ printers: 0
+ scanners: 0
+ modems: 0
+ drives: 0
+process 1 => 
+P1 instruction 4
+P1 return SIGINT
+dispatcher => todos os processos terminaram.

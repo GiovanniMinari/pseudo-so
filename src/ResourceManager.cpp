@@ -45,14 +45,13 @@ int ResourceManager::countFree(const std::vector<int>& pool) const {
 }
 
 bool ResourceManager::canAllocate(const Process& process) const {
-    ResourceRequest request = process.getResources();
-
+    // A especificacao diz que processos de tempo real nao precisam de I/O.
+    // Portanto, nesta simulacao eles nao disputam scanner, impressora, modem ou SATA.
     if (process.isRealTime()) {
-        return request.printers == 0
-            && request.scanners == 0
-            && request.modems == 0
-            && request.sataDrives == 0;
+        return true;
     }
+
+    ResourceRequest request = process.getResources();
 
     return request.printers <= countFree(printerOwner)
         && request.scanners <= countFree(scannerOwner)
@@ -63,6 +62,11 @@ bool ResourceManager::canAllocate(const Process& process) const {
 bool ResourceManager::allocate(const Process& process) {
     if (!canAllocate(process)) {
         return false;
+    }
+
+    // Processos de tempo real ignoram E/S.
+    if (process.isRealTime()) {
+        return true;
     }
 
     ResourceRequest request = process.getResources();

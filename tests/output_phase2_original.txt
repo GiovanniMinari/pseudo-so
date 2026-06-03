@@ -1,0 +1,32 @@
+dispatcher => 
+ PID: 0
+ arrival: 2
+ frames: 4
+ priority: 0
+ time: 3
+ printers: 0
+ scanners: 0
+ modems: 0
+ drives: 0
+process 0 => 
+P0 STARTED
+P0 instruction 1
+P0 instruction 2
+P0 instruction 3
+P0 return SIGINT
+dispatcher => 
+ PID: 1
+ arrival: 8
+ frames: 8
+ priority: 0
+ time: 2
+ printers: 0
+ scanners: 0
+ modems: 0
+ drives: 0
+process 1 => 
+P1 STARTED
+P1 instruction 1
+P1 instruction 2
+P1 return SIGINT
+dispatcher => todos os processos terminaram.

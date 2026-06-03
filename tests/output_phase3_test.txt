@@ -1,0 +1,81 @@
+dispatcher => P1 BLOCKED: aguardando recurso de E/S.
+dispatcher => 
+ PID: 0
+ arrival: 0
+ frames: 4
+ priority: 1
+ time: 3
+ printers: 0
+ scanners: 1
+ modems: 0
+ drives: 0
+process 0 => 
+P0 STARTED
+P0 instruction 1
+dispatcher => 
+ PID: 2
+ arrival: 1
+ frames: 4
+ priority: 0
+ time: 2
+ printers: 1
+ scanners: 1
+ modems: 1
+ drives: 1
+process 2 => 
+P2 STARTED
+P2 instruction 1
+P2 instruction 2
+P2 return SIGINT
+dispatcher => 
+ PID: 0
+ arrival: 0
+ frames: 4
+ priority: 2
+ time: 2
+ printers: 0
+ scanners: 1
+ modems: 0
+ drives: 0
+process 0 => 
+P0 instruction 2
+dispatcher => 
+ PID: 0
+ arrival: 0
+ frames: 4
+ priority: 3
+ time: 1
+ printers: 0
+ scanners: 1
+ modems: 0
+ drives: 0
+process 0 => 
+P0 instruction 3
+P0 return SIGINT
+dispatcher => 
+ PID: 1
+ arrival: 0
+ frames: 4
+ priority: 1
+ time: 2
+ printers: 0
+ scanners: 1
+ modems: 0
+ drives: 0
+process 1 => 
+P1 STARTED
+P1 instruction 1
+dispatcher => 
+ PID: 1
+ arrival: 0
+ frames: 4
+ priority: 2
+ time: 1
+ printers: 0
+ scanners: 1
+ modems: 0
+ drives: 0
+process 1 => 
+P1 instruction 2
+P1 return SIGINT
+dispatcher => todos os processos terminaram.
