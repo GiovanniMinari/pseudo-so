@@ -31,6 +31,8 @@ public:
 
     void accessPage(Process& process, int pageNumber);
 
+    void releaseProcess(const Process& process);
+
     void printPageFaults(const std::vector<Process>& processes) const;
 };
 

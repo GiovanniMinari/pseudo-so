@@ -90,7 +90,7 @@ void Dispatcher::run() {
 }
 
 void Dispatcher::printFinalReport() const {
-    std::cout << "dispatcher => relatorio final sera implementado nas proximas fases.\n";
+    memoryManager.printPageFaults(processes);
 }
 
 void Dispatcher::createArrivedProcesses() {
@@ -107,6 +107,7 @@ void Dispatcher::createArrivedProcesses() {
         }
 
         if (resourceManager.allocate(process)) {
+            memoryManager.preloadProcess(process);
             process.setState(ProcessState::READY);
             scheduler.addProcess(process);
         } else {
@@ -141,12 +142,25 @@ void Dispatcher::executeRealTimeProcess(Process& process) {
     }
 
     while (!process.isFinished()) {
+        int pageNumber = process.getNextPageReference();
+        int faultsBefore = process.getPageFaults();
+
+        memoryManager.accessPage(process, pageNumber);
         process.executeOneInstruction();
         currentTime++;
 
         std::cout << "P" << process.getPid()
-                  << " instruction " << process.getExecutedInstructions()
-                  << "\n";
+                  << " instruction " << process.getExecutedInstructions();
+
+        if (pageNumber >= 0) {
+            std::cout << " (page " << pageNumber << ")";
+        }
+
+        if (process.getPageFaults() > faultsBefore) {
+            std::cout << " PAGE FAULT";
+        }
+
+        std::cout << "\n";
     }
 
     finishProcess(process);
@@ -166,13 +180,26 @@ void Dispatcher::executeUserProcess(Process& process) {
     int executedInThisQuantum = 0;
     while (!process.isFinished()
            && executedInThisQuantum < scheduler.getQuantum()) {
+        int pageNumber = process.getNextPageReference();
+        int faultsBefore = process.getPageFaults();
+
+        memoryManager.accessPage(process, pageNumber);
         process.executeOneInstruction();
         executedInThisQuantum++;
         currentTime++;
 
         std::cout << "P" << process.getPid()
-                  << " instruction " << process.getExecutedInstructions()
-                  << "\n";
+                  << " instruction " << process.getExecutedInstructions();
+
+        if (pageNumber >= 0) {
+            std::cout << " (page " << pageNumber << ")";
+        }
+
+        if (process.getPageFaults() > faultsBefore) {
+            std::cout << " PAGE FAULT";
+        }
+
+        std::cout << "\n";
     }
 
     if (process.isFinished()) {
@@ -190,6 +217,7 @@ void Dispatcher::executeUserProcess(Process& process) {
 
 void Dispatcher::finishProcess(Process& process) {
     resourceManager.release(process);
+    memoryManager.releaseProcess(process);
     process.setState(ProcessState::FINISHED);
 }
 

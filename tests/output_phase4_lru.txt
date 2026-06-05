@@ -1,0 +1,97 @@
+dispatcher => 
+ PID: 0
+ arrival: 0
+ frames: 2
+ priority: 0
+ time: 6
+ printers: 0
+ scanners: 0
+ modems: 0
+ drives: 0
+process 0 => 
+P0 STARTED
+P0 instruction 1 (page 1)
+P0 instruction 2 (page 2) PAGE FAULT
+P0 instruction 3 (page 1)
+P0 instruction 4 (page 3) PAGE FAULT
+P0 instruction 5 (page 2) PAGE FAULT
+P0 instruction 6 (page 4) PAGE FAULT
+P0 return SIGINT
+dispatcher => 
+ PID: 1
+ arrival: 0
+ frames: 2
+ priority: 1
+ time: 6
+ printers: 0
+ scanners: 0
+ modems: 0
+ drives: 0
+process 1 => 
+P1 STARTED
+P1 instruction 1 (page 1)
+dispatcher => 
+ PID: 1
+ arrival: 0
+ frames: 2
+ priority: 2
+ time: 5
+ printers: 0
+ scanners: 0
+ modems: 0
+ drives: 0
+process 1 => 
+P1 instruction 2 (page 2) PAGE FAULT
+dispatcher => 
+ PID: 1
+ arrival: 0
+ frames: 2
+ priority: 3
+ time: 4
+ printers: 0
+ scanners: 0
+ modems: 0
+ drives: 0
+process 1 => 
+P1 instruction 3 (page 3) PAGE FAULT
+dispatcher => 
+ PID: 1
+ arrival: 0
+ frames: 2
+ priority: 3
+ time: 3
+ printers: 0
+ scanners: 0
+ modems: 0
+ drives: 0
+process 1 => 
+P1 instruction 4 (page 1) PAGE FAULT
+dispatcher => 
+ PID: 1
+ arrival: 0
+ frames: 2
+ priority: 3
+ time: 2
+ printers: 0
+ scanners: 0
+ modems: 0
+ drives: 0
+process 1 => 
+P1 instruction 5 (page 2) PAGE FAULT
+dispatcher => 
+ PID: 1
+ arrival: 0
+ frames: 2
+ priority: 3
+ time: 1
+ printers: 0
+ scanners: 0
+ modems: 0
+ drives: 0
+process 1 => 
+P1 instruction 6 (page 3) PAGE FAULT
+P1 return SIGINT
+dispatcher => todos os processos terminaram.
+Numero de Faltas de Paginas por processo:
+P0 = 4 faltas de paginas
+P1 = 5 faltas de paginas

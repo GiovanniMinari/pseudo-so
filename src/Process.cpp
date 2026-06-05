@@ -108,6 +108,14 @@ bool Process::hasNextPageReference() const {
     return currentPageIndex < static_cast<int>(pageReferences.size());
 }
 
+int Process::peekNextPageReference() const {
+    if (!hasNextPageReference()) {
+        return -1;
+    }
+
+    return pageReferences[currentPageIndex];
+}
+
 int Process::getNextPageReference() {
     if (!hasNextPageReference()) {
         return -1;

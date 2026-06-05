@@ -68,6 +68,7 @@ public:
     bool isFinished() const;
     bool hasNextPageReference() const;
 
+    int peekNextPageReference() const;
     int getNextPageReference();
 
     void executeOneInstruction();
