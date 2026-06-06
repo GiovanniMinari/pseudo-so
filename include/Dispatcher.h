@@ -44,7 +44,7 @@ public:
 
     void run();
 
-    void printFinalReport() const;
+    void printFinalReport();
 };
 
 #endif

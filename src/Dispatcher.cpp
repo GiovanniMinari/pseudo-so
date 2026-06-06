@@ -89,7 +89,8 @@ void Dispatcher::run() {
     std::cout << "dispatcher => todos os processos terminaram.\n";
 }
 
-void Dispatcher::printFinalReport() const {
+void Dispatcher::printFinalReport() {
+    fileSystemManager.executeOperations(processes);
     memoryManager.printPageFaults(processes);
 }
 
