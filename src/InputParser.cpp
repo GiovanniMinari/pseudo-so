@@ -1,7 +1,6 @@
 #include "InputParser.h"
 
 #include <fstream>
-#include <iostream>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -38,10 +37,44 @@ namespace {
 
     int toInt(const std::string& value, const std::string& context) {
         try {
-            return std::stoi(trim(value));
+            std::size_t position = 0;
+            int result = std::stoi(trim(value), &position);
+
+            if (position != trim(value).size()) {
+                throw std::runtime_error("sobra de caracteres");
+            }
+
+            return result;
         } catch (const std::exception&) {
             throw std::runtime_error("Valor inteiro invalido em " + context + ": '" + value + "'");
         }
+    }
+
+    void require(bool condition, const std::string& message) {
+        if (!condition) {
+            throw std::runtime_error(message);
+        }
+    }
+
+    void validateProcessFields(
+        int lineNumber,
+        int arrivalTime,
+        int priority,
+        int processorTime,
+        int workingSetSize,
+        const ResourceRequest& resources
+    ) {
+        require(arrivalTime >= 0,
+                "Tempo de inicializacao negativo na linha " + std::to_string(lineNumber) + ".");
+        require(priority >= 0 && priority <= 3,
+                "Prioridade invalida na linha " + std::to_string(lineNumber) + ". Use 0, 1, 2 ou 3.");
+        require(processorTime > 0,
+                "Tempo de processador invalido na linha " + std::to_string(lineNumber) + ".");
+        require(workingSetSize > 0,
+                "Working set invalido na linha " + std::to_string(lineNumber) + ".");
+        require(resources.printers >= 0 && resources.scanners >= 0
+                && resources.modems >= 0 && resources.sataDrives >= 0,
+                "Requisicao de recurso negativa na linha " + std::to_string(lineNumber) + ".");
     }
 }
 
@@ -64,6 +97,8 @@ std::vector<Process> InputParser::readProcesses(const std::string& path) {
             continue;
         }
 
+        require(pid < 1000, "O arquivo de processos excede o limite de 1000 processos.");
+
         std::vector<std::string> fields = splitByComma(line);
 
         if (fields.size() != 8) {
@@ -84,6 +119,15 @@ std::vector<Process> InputParser::readProcesses(const std::string& path) {
         resources.modems = toInt(fields[6], "processes.txt linha " + std::to_string(lineNumber));
         resources.sataDrives = toInt(fields[7], "processes.txt linha " + std::to_string(lineNumber));
 
+        validateProcessFields(
+            lineNumber,
+            arrivalTime,
+            priority,
+            processorTime,
+            workingSetSize,
+            resources
+        );
+
         processes.push_back(Process(pid, arrivalTime, priority, processorTime, workingSetSize, resources));
         pid++;
     }
@@ -91,14 +135,14 @@ std::vector<Process> InputParser::readProcesses(const std::string& path) {
     return processes;
 }
 
-std::vector<std::vector<int>> InputParser::readPageReferences(const std::string& path) {
+std::vector<std::vector<int> > InputParser::readPageReferences(const std::string& path) {
     std::ifstream file(path.c_str());
 
     if (!file.is_open()) {
         throw std::runtime_error("Nao foi possivel abrir o arquivo de strings de referencia: " + path);
     }
 
-    std::vector<std::vector<int>> allReferences;
+    std::vector<std::vector<int> > allReferences;
     std::string line;
     int lineNumber = 0;
 
@@ -113,7 +157,10 @@ std::vector<std::vector<int>> InputParser::readPageReferences(const std::string&
         std::vector<int> references;
 
         for (std::size_t i = 0; i < fields.size(); i++) {
-            references.push_back(toInt(fields[i], "string.txt linha " + std::to_string(lineNumber)));
+            int page = toInt(fields[i], "string.txt linha " + std::to_string(lineNumber));
+            require(page >= 0,
+                    "Pagina negativa na linha " + std::to_string(lineNumber) + " do string.txt.");
+            references.push_back(page);
         }
 
         allReferences.push_back(references);
@@ -140,6 +187,7 @@ void InputParser::readFileSystemInput(
     }
     lineNumber++;
     int totalBlocks = toInt(line, "files.txt linha 1");
+    require(totalBlocks > 0, "Quantidade total de blocos deve ser positiva.");
     fileSystem.initializeDisk(totalBlocks);
 
     if (!std::getline(file, line)) {
@@ -147,6 +195,7 @@ void InputParser::readFileSystemInput(
     }
     lineNumber++;
     int occupiedSegments = toInt(line, "files.txt linha 2");
+    require(occupiedSegments >= 0, "Quantidade de segmentos ocupados nao pode ser negativa.");
 
     for (int i = 0; i < occupiedSegments; i++) {
         if (!std::getline(file, line)) {
@@ -172,6 +221,12 @@ void InputParser::readFileSystemInput(
         int startBlock = toInt(fields[1], "files.txt linha " + std::to_string(lineNumber));
         int size = toInt(fields[2], "files.txt linha " + std::to_string(lineNumber));
 
+        require(!fileName.empty(), "Nome de arquivo vazio na linha " + std::to_string(lineNumber) + ".");
+        require(startBlock >= 0, "Bloco inicial negativo na linha " + std::to_string(lineNumber) + ".");
+        require(size > 0, "Tamanho de arquivo invalido na linha " + std::to_string(lineNumber) + ".");
+        require(startBlock + size <= totalBlocks,
+                "Segmento inicial fora do disco na linha " + std::to_string(lineNumber) + ".");
+
         fileSystem.addInitialFile(fileName, startBlock, size);
     }
 
@@ -193,12 +248,18 @@ void InputParser::readFileSystemInput(
 
         FileOperation operation;
         operation.processPid = toInt(fields[0], "files.txt linha " + std::to_string(lineNumber));
+        require(operation.processPid >= 0,
+                "PID negativo na operacao da linha " + std::to_string(lineNumber) + ".");
 
         int operationCode = toInt(fields[1], "files.txt linha " + std::to_string(lineNumber));
         if (operationCode == 0) {
             operation.type = FileOperationType::CREATE;
+            require(fields.size() == 4,
+                    "Operacao create sem tamanho na linha " + std::to_string(lineNumber) + " do files.txt.");
         } else if (operationCode == 1) {
             operation.type = FileOperationType::DELETE;
+            require(fields.size() == 3,
+                    "Operacao delete com quantidade incorreta de campos na linha " + std::to_string(lineNumber) + ".");
         } else {
             throw std::runtime_error(
                 "Codigo de operacao invalido na linha " + std::to_string(lineNumber) + " do files.txt."
@@ -206,15 +267,14 @@ void InputParser::readFileSystemInput(
         }
 
         operation.fileName = fields[2];
+        require(!operation.fileName.empty(),
+                "Nome de arquivo vazio na operacao da linha " + std::to_string(lineNumber) + ".");
         operation.size = 0;
 
         if (operation.type == FileOperationType::CREATE) {
-            if (fields.size() != 4) {
-                throw std::runtime_error(
-                    "Operacao create sem tamanho na linha " + std::to_string(lineNumber) + " do files.txt."
-                );
-            }
             operation.size = toInt(fields[3], "files.txt linha " + std::to_string(lineNumber));
+            require(operation.size > 0,
+                    "Tamanho de criacao invalido na linha " + std::to_string(lineNumber) + ".");
         }
 
         fileSystem.addOperation(operation);

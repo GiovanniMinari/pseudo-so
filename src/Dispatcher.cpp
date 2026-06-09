@@ -41,6 +41,7 @@ void Dispatcher::run() {
 
     while (!allProcessesFinished()) {
         createArrivedProcesses();
+        scheduler.applyAging(processes);
 
         if (!scheduler.hasReadyProcess()) {
             int nextArrivalTime = std::numeric_limits<int>::max();

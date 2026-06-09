@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <sstream>
+#include <stdexcept>
 
 namespace {
     const Process* findProcessByPid(int pid, const std::vector<Process>& processes) {
@@ -39,6 +40,10 @@ FileSystemManager::FileSystemManager()
 }
 
 void FileSystemManager::initializeDisk(int totalBlocks) {
+    if (totalBlocks <= 0) {
+        throw std::runtime_error("Quantidade total de blocos do disco deve ser positiva.");
+    }
+
     this->totalBlocks = totalBlocks;
     disk.assign(totalBlocks, "0");
     files.clear();
@@ -46,6 +51,21 @@ void FileSystemManager::initializeDisk(int totalBlocks) {
 }
 
 void FileSystemManager::addInitialFile(const std::string& name, int startBlock, int size) {
+    if (name.empty() || size <= 0 || startBlock < 0 || startBlock + size > totalBlocks) {
+        throw std::runtime_error("Segmento inicial de arquivo invalido: " + name);
+    }
+
+    if (files.find(name) != files.end()) {
+        throw std::runtime_error("Arquivo inicial duplicado: " + name);
+    }
+
+    for (int i = 0; i < size; i++) {
+        int block = startBlock + i;
+        if (disk[block] != "0") {
+            throw std::runtime_error("Sobreposicao de blocos no arquivo inicial: " + name);
+        }
+    }
+
     DiskFile file;
     file.name = name;
     file.startBlock = startBlock;
@@ -55,10 +75,7 @@ void FileSystemManager::addInitialFile(const std::string& name, int startBlock, 
     files[name] = file;
 
     for (int i = 0; i < size; i++) {
-        int block = startBlock + i;
-        if (block >= 0 && block < static_cast<int>(disk.size())) {
-            disk[block] = name;
-        }
+        disk[startBlock + i] = name;
     }
 }
 

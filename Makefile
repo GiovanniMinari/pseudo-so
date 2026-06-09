@@ -8,8 +8,7 @@ SRC = src/main.cpp \
       src/ResourceManager.cpp \
       src/FileSystemManager.cpp \
       src/InputParser.cpp \
-      src/Dispatcher.cpp \
-      src/Utils.cpp
+      src/Dispatcher.cpp
 
 OUT = dispatcher
 
