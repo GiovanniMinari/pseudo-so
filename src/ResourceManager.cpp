@@ -45,8 +45,7 @@ int ResourceManager::countFree(const std::vector<int>& pool) const {
 }
 
 bool ResourceManager::canAllocate(const Process& process) const {
-    // A especificacao diz que processos de tempo real nao precisam de I/O.
-    // Portanto, nesta simulacao eles nao disputam scanner, impressora, modem ou SATA.
+    // Processos de tempo real nao alocam recursos de E/S.
     if (process.isRealTime()) {
         return true;
     }
