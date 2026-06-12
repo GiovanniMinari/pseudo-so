@@ -7,6 +7,8 @@
 #include <vector>
 
 namespace {
+    const int MAX_PROCESSES = 1000;
+
     std::string trim(const std::string& text) {
         const std::string spaces = " \t\r\n";
         std::size_t start = text.find_first_not_of(spaces);
@@ -97,7 +99,7 @@ std::vector<Process> InputParser::readProcesses(const std::string& path) {
             continue;
         }
 
-        require(pid < 1000, "O arquivo de processos excede o limite de 1000 processos.");
+        require(pid < MAX_PROCESSES, "O arquivo de processos excede o limite de 1000 processos.");
 
         std::vector<std::string> fields = splitByComma(line);
 

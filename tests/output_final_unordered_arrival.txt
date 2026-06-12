@@ -1,0 +1,59 @@
+dispatcher => 
+ PID: 0
+ arrival: 0
+ frames: 4
+ priority: 0
+ time: 10
+ printers: 0
+ scanners: 0
+ modems: 0
+ drives: 0
+process 0 => 
+P0 STARTED
+P0 instruction 1
+P0 instruction 2
+P0 instruction 3
+P0 instruction 4
+P0 instruction 5
+P0 instruction 6
+P0 instruction 7
+P0 instruction 8
+P0 instruction 9
+P0 instruction 10
+P0 return SIGINT
+dispatcher => 
+ PID: 2
+ arrival: 1
+ frames: 4
+ priority: 0
+ time: 1
+ printers: 0
+ scanners: 0
+ modems: 0
+ drives: 0
+process 2 => 
+P2 STARTED
+P2 instruction 1
+P2 return SIGINT
+dispatcher => 
+ PID: 1
+ arrival: 2
+ frames: 4
+ priority: 0
+ time: 1
+ printers: 0
+ scanners: 0
+ modems: 0
+ drives: 0
+process 1 => 
+P1 STARTED
+P1 instruction 1
+P1 return SIGINT
+dispatcher => todos os processos terminaram.
+Sistema de arquivos =>
+Mapa de ocupacao do disco:
+0 0 0 0 0 0 0 0 0 0
+Numero de Faltas de Paginas por processo:
+P0 = 3 faltas de paginas
+P1 = 3 faltas de paginas
+P2 = 3 faltas de paginas

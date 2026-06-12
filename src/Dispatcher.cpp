@@ -101,6 +101,8 @@ void Dispatcher::printFinalReport() {
 }
 
 void Dispatcher::createArrivedProcesses() {
+    std::vector<int> arrivedIndexes;
+
     for (std::size_t i = 0; i < processes.size(); i++) {
         Process& process = processes[i];
 
@@ -109,9 +111,28 @@ void Dispatcher::createArrivedProcesses() {
              || process.getState() == ProcessState::BLOCKED)
             && process.getArrivalTime() <= currentTime;
 
-        if (!canTryToEnterReadyQueue) {
-            continue;
+        if (canTryToEnterReadyQueue) {
+            arrivedIndexes.push_back(static_cast<int>(i));
         }
+    }
+
+    std::sort(
+        arrivedIndexes.begin(),
+        arrivedIndexes.end(),
+        [this](int left, int right) {
+            const Process& leftProcess = processes[left];
+            const Process& rightProcess = processes[right];
+
+            if (leftProcess.getArrivalTime() != rightProcess.getArrivalTime()) {
+                return leftProcess.getArrivalTime() < rightProcess.getArrivalTime();
+            }
+
+            return leftProcess.getPid() < rightProcess.getPid();
+        }
+    );
+
+    for (std::size_t i = 0; i < arrivedIndexes.size(); i++) {
+        Process& process = processes[arrivedIndexes[i]];
 
         if (!resourceManager.isRequestPossible(process)) {
             std::cout
