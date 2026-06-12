@@ -33,6 +33,10 @@ public:
 
     void releaseProcess(const Process& process);
 
+    void simulateProcessReferences(Process& process);
+
+    void simulatePageReferences(std::vector<Process>& processes);
+
     void printPageFaults(const std::vector<Process>& processes) const;
 };
 

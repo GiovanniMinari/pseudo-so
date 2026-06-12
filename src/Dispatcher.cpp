@@ -43,6 +43,10 @@ void Dispatcher::run() {
         createArrivedProcesses();
         scheduler.applyAging(processes);
 
+        if (allProcessesFinished()) {
+            break;
+        }
+
         if (!scheduler.hasReadyProcess()) {
             int nextArrivalTime = std::numeric_limits<int>::max();
 
@@ -92,6 +96,7 @@ void Dispatcher::run() {
 
 void Dispatcher::printFinalReport() {
     fileSystemManager.executeOperations(processes);
+    memoryManager.simulatePageReferences(processes);
     memoryManager.printPageFaults(processes);
 }
 
@@ -108,8 +113,15 @@ void Dispatcher::createArrivedProcesses() {
             continue;
         }
 
+        if (!resourceManager.isRequestPossible(process)) {
+            std::cout
+                << "dispatcher => P" << process.getPid()
+                << " rejeitado: requisicao impossivel de recursos de E/S.\n";
+            process.setState(ProcessState::FINISHED);
+            continue;
+        }
+
         if (resourceManager.allocate(process)) {
-            memoryManager.preloadProcess(process);
             process.setState(ProcessState::READY);
             scheduler.addProcess(process);
         } else {
@@ -144,25 +156,12 @@ void Dispatcher::executeRealTimeProcess(Process& process) {
     }
 
     while (!process.isFinished()) {
-        int pageNumber = process.getNextPageReference();
-        int faultsBefore = process.getPageFaults();
-
-        memoryManager.accessPage(process, pageNumber);
         process.executeOneInstruction();
         currentTime++;
 
         std::cout << "P" << process.getPid()
-                  << " instruction " << process.getExecutedInstructions();
-
-        if (pageNumber >= 0) {
-            std::cout << " (page " << pageNumber << ")";
-        }
-
-        if (process.getPageFaults() > faultsBefore) {
-            std::cout << " PAGE FAULT";
-        }
-
-        std::cout << "\n";
+                  << " instruction " << process.getExecutedInstructions()
+                  << "\n";
     }
 
     finishProcess(process);
@@ -182,26 +181,13 @@ void Dispatcher::executeUserProcess(Process& process) {
     int executedInThisQuantum = 0;
     while (!process.isFinished()
            && executedInThisQuantum < scheduler.getQuantum()) {
-        int pageNumber = process.getNextPageReference();
-        int faultsBefore = process.getPageFaults();
-
-        memoryManager.accessPage(process, pageNumber);
         process.executeOneInstruction();
         executedInThisQuantum++;
         currentTime++;
 
         std::cout << "P" << process.getPid()
-                  << " instruction " << process.getExecutedInstructions();
-
-        if (pageNumber >= 0) {
-            std::cout << " (page " << pageNumber << ")";
-        }
-
-        if (process.getPageFaults() > faultsBefore) {
-            std::cout << " PAGE FAULT";
-        }
-
-        std::cout << "\n";
+                  << " instruction " << process.getExecutedInstructions()
+                  << "\n";
     }
 
     if (process.isFinished()) {

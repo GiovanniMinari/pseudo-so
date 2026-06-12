@@ -56,6 +56,7 @@ public:
     int getPageFaults() const;
     int getExecutedInstructions() const;
     int getWaitingTime() const;
+    const std::vector<int>& getPageReferences() const;
 
     ResourceRequest getResources() const;
     ProcessState getState() const;
@@ -74,6 +75,7 @@ public:
     void executeOneInstruction();
 
     void incrementPageFaults();
+    void resetPageFaults();
     void increaseWaitingTime();
     void resetWaitingTime();
 };

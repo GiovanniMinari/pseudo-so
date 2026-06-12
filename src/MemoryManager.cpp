@@ -1,22 +1,26 @@
 #include "MemoryManager.h"
 
+#include <algorithm>
 #include <iostream>
 
 namespace {
-    bool frameBelongsToProcessArea(const Frame& frame, const Process& process) {
-        if (process.isRealTime()) {
-            return frame.realTimeArea;
-        }
+    const int TOTAL_FRAMES = 20;
+    const int REAL_TIME_FRAMES = 8;
+    const int USER_FRAMES = TOTAL_FRAMES - REAL_TIME_FRAMES;
 
-        return !frame.realTimeArea;
+    bool frameBelongsToProcessArea(const Frame& frame, const Process& process) {
+        return process.isRealTime() ? frame.realTimeArea : !frame.realTimeArea;
     }
 
-    int minimumWorkingSetSize(const Process& process) {
-        if (process.getWorkingSetSize() <= 0) {
+    int getFrameLimitForProcess(const Process& process) {
+        int areaLimit = process.isRealTime() ? REAL_TIME_FRAMES : USER_FRAMES;
+        int workingSet = process.getWorkingSetSize();
+
+        if (workingSet <= 0) {
             return 1;
         }
 
-        return process.getWorkingSetSize();
+        return std::min(workingSet, areaLimit);
     }
 }
 
@@ -27,13 +31,13 @@ MemoryManager::MemoryManager()
 void MemoryManager::initialize() {
     frames.clear();
 
-    for (int i = 0; i < 20; i++) {
+    for (int i = 0; i < TOTAL_FRAMES; i++) {
         Frame frame;
         frame.occupied = false;
         frame.pid = -1;
         frame.pageNumber = -1;
         frame.lastUsedTime = 0;
-        frame.realTimeArea = (i < 8);
+        frame.realTimeArea = (i < REAL_TIME_FRAMES);
         frames.push_back(frame);
     }
 
@@ -42,9 +46,9 @@ void MemoryManager::initialize() {
 
 int MemoryManager::findFreeFrameForProcess(const Process& process) const {
     int usedByProcess = countFramesUsedByProcess(process.getPid());
-    int maxFramesForProcess = minimumWorkingSetSize(process);
+    int frameLimit = getFrameLimitForProcess(process);
 
-    if (usedByProcess >= maxFramesForProcess) {
+    if (usedByProcess >= frameLimit) {
         return -1;
     }
 
@@ -100,11 +104,13 @@ int MemoryManager::countFramesUsedByProcess(int pid) const {
 }
 
 void MemoryManager::preloadProcess(Process& process) {
-    if (!process.hasNextPageReference()) {
+    const std::vector<int>& references = process.getPageReferences();
+
+    if (references.empty()) {
         return;
     }
 
-    int pageNumber = process.peekNextPageReference();
+    int pageNumber = references[0];
     if (pageNumber < 0 || isPageLoaded(process.getPid(), pageNumber)) {
         return;
     }
@@ -115,8 +121,6 @@ void MemoryManager::preloadProcess(Process& process) {
     }
 
     if (frameIndex == -1) {
-        std::cout << "dispatcher => P" << process.getPid()
-                  << " sem frame livre para pre-carga de memoria.\n";
         return;
     }
 
@@ -151,8 +155,6 @@ void MemoryManager::accessPage(Process& process, int pageNumber) {
     }
 
     if (frameIndex == -1) {
-        std::cout << "dispatcher => P" << process.getPid()
-                  << " gerou page fault, mas nao ha frame local disponivel.\n";
         return;
     }
 
@@ -170,6 +172,32 @@ void MemoryManager::releaseProcess(const Process& process) {
             frames[i].pageNumber = -1;
             frames[i].lastUsedTime = 0;
         }
+    }
+}
+
+void MemoryManager::simulateProcessReferences(Process& process) {
+    process.resetPageFaults();
+    releaseProcess(process);
+
+    const std::vector<int>& references = process.getPageReferences();
+    if (process.getExecutedInstructions() == 0 || references.empty()) {
+        return;
+    }
+
+    preloadProcess(process);
+
+    for (std::size_t i = 0; i < references.size(); i++) {
+        accessPage(process, references[i]);
+    }
+
+    releaseProcess(process);
+}
+
+void MemoryManager::simulatePageReferences(std::vector<Process>& processes) {
+    initialize();
+
+    for (std::size_t i = 0; i < processes.size(); i++) {
+        simulateProcessReferences(processes[i]);
     }
 }
 

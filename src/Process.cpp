@@ -75,6 +75,10 @@ int Process::getWaitingTime() const {
     return waitingTime;
 }
 
+const std::vector<int>& Process::getPageReferences() const {
+    return pageReferences;
+}
+
 ResourceRequest Process::getResources() const {
     return resources;
 }
@@ -139,6 +143,10 @@ void Process::executeOneInstruction() {
 
 void Process::incrementPageFaults() {
     pageFaults++;
+}
+
+void Process::resetPageFaults() {
+    pageFaults = 0;
 }
 
 void Process::increaseWaitingTime() {

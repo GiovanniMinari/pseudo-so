@@ -20,6 +20,8 @@ public:
 
     void initialize();
 
+    bool isRequestPossible(const Process& process) const;
+
     bool canAllocate(const Process& process) const;
 
     bool allocate(const Process& process);

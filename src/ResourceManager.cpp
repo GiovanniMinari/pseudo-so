@@ -44,8 +44,24 @@ int ResourceManager::countFree(const std::vector<int>& pool) const {
     return freeAmount;
 }
 
+bool ResourceManager::isRequestPossible(const Process& process) const {
+    if (process.isRealTime()) {
+        return true;
+    }
+
+    ResourceRequest request = process.getResources();
+
+    return request.printers <= static_cast<int>(printerOwner.size())
+        && request.scanners <= static_cast<int>(scannerOwner.size())
+        && request.modems <= static_cast<int>(modemOwner.size())
+        && request.sataDrives <= static_cast<int>(sataOwner.size());
+}
+
 bool ResourceManager::canAllocate(const Process& process) const {
-    // Processos de tempo real nao alocam recursos de E/S.
+    if (!isRequestPossible(process)) {
+        return false;
+    }
+
     if (process.isRealTime()) {
         return true;
     }
@@ -63,7 +79,6 @@ bool ResourceManager::allocate(const Process& process) {
         return false;
     }
 
-    // Processos de tempo real ignoram E/S.
     if (process.isRealTime()) {
         return true;
     }
