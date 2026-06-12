@@ -15,6 +15,10 @@ namespace {
         return 0;
     }
 
+    bool canProcessAccessFileSystem(const Process* process) {
+        return process != 0 && process->getExecutedInstructions() > 0;
+    }
+
     std::string formatBlockInterval(int startBlock, int size) {
         std::ostringstream output;
 
@@ -114,7 +118,7 @@ int FileSystemManager::findFirstFit(int size) const {
 }
 
 bool FileSystemManager::processExists(int pid, const std::vector<Process>& processes) const {
-    return findProcessByPid(pid, processes) != 0;
+    return canProcessAccessFileSystem(findProcessByPid(pid, processes));
 }
 
 bool FileSystemManager::canDeleteFile(const Process& process, const DiskFile& file) const {
@@ -136,6 +140,13 @@ void FileSystemManager::executeOperations(const std::vector<Process>& processes)
         if (process == 0) {
             std::cout << "Operacao " << operationNumber << " => Falha\n";
             std::cout << "O processo " << operation.processPid << " nao existe.\n";
+            continue;
+        }
+
+        if (!canProcessAccessFileSystem(process)) {
+            std::cout << "Operacao " << operationNumber << " => Falha\n";
+            std::cout << "O processo " << operation.processPid
+                      << " nao executou.\n";
             continue;
         }
 
@@ -248,7 +259,7 @@ bool FileSystemManager::deleteFile(
     const std::vector<Process>& processes
 ) {
     const Process* process = findProcessByPid(pid, processes);
-    if (process == 0) {
+    if (!canProcessAccessFileSystem(process)) {
         return false;
     }
 

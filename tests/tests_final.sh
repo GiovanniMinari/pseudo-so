@@ -15,3 +15,7 @@ cat output_final_permissions.txt
 echo "=== Teste 3: aging do escalonador ==="
 ./dispatcher tests/processes_phase6_aging.txt tests/files_phase6_empty.txt tests/string_phase6_aging.txt > output_final_aging.txt
 cat output_final_aging.txt
+
+echo "=== Teste 4: requisicao impossivel de recursos + operacao de arquivo negada ==="
+./dispatcher tests/processes_impossible_resources.txt tests/files_impossible_resources.txt tests/string_impossible_resources.txt > output_final_impossible_resources.txt
+cat output_final_impossible_resources.txt
